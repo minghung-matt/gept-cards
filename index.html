@@ -1,186 +1,302 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEPT 英檢中級閃卡</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
+import React, { useState, useMemo } from 'react';
+import { Volume2, ChevronLeft, ChevronRight, RotateCcw, CheckCircle2, Search, Calendar } from 'lucide-react';
+
+const wordData = {
+  "Day 1": [
+    { word: "Abandon", ipa: "[əˈbændən]", pos: "v.", trans: "拋棄、放棄", detail: "重音在第二音節 ban。", example: "He had to abandon the car after it broke down.", exampleTrans: "汽車拋錨後，他不得不棄車而去。" },
+    { word: "Accomplish", ipa: "[əˈkʌmplɪʃ]", pos: "v.", trans: "完成、實現", detail: "sh 發音要輕快。", example: "We can accomplish anything if we work together.", exampleTrans: "如果我們齊心協力，任何事都能完成。" },
+    { word: "Accountable", ipa: "[əˈkaʊntəbl]", pos: "adj.", trans: "應負責任的", detail: "重音在 coun。", example: "Politicians should be accountable to the public.", exampleTrans: "政治人物應對公眾負責。" },
+    { word: "Accustom", ipa: "[əˈkʌstəm]", pos: "v.", trans: "使習慣於", detail: "cus 發短音 [ʌ]。", example: "It took me a while to accustom myself to the new climate.", exampleTrans: "我花了一段時間才讓自己適應新氣候。" },
+    { word: "Acquisition", ipa: "[ˌækwɪˈzɪʃn]", pos: "n.", trans: "獲得、獲得物", detail: "重音在 zi。", example: "The library's latest acquisition is a rare book.", exampleTrans: "圖書館最新獲得的藏品是一本罕見的書。" }
+  ],
+  "Day 2": [
+    { word: "Beneficial", ipa: "[ˌbenɪˈfɪʃl]", pos: "adj.", trans: "有益的", detail: "重音在 fi。", example: "A balanced diet is beneficial to your health.", exampleTrans: "均衡飲食對你的健康有益。" },
+    { word: "Capacity", ipa: "[kəˈpæsəti]", pos: "n.", trans: "容量、能力", detail: "重音在 pa。", example: "The stadium has a seating capacity of 50,000.", exampleTrans: "這座體育場有五萬個座位。" },
+    { word: "Confront", ipa: "[kənˈfrʌnt]", pos: "v.", trans: "面對、對抗", detail: "front 發音類似 fr-unt。", example: "We must confront the challenges head-on.", exampleTrans: "我們必須正面迎接挑戰。" },
+    { word: "Distinguish", ipa: "[dɪˈstɪŋɡwɪʃ]", pos: "v.", trans: "區分、辨別", detail: "gui 發 [ɡwɪ]。", example: "It's hard to distinguish between the two colors.", exampleTrans: "很難區分這兩種顏色。" },
+    { word: "Equivalent", ipa: "[ɪˈkwɪvələnt]", pos: "adj./n.", trans: "相等的、等價物", detail: "重音在 qui [kwɪ]。", example: "Eight kilometers is equivalent to five miles.", exampleTrans: "8公里大約等於5英里。" }
+  ],
+  "Day 3": [
+    { word: "Facilitate", ipa: "[fəˈsɪlɪteɪt]", pos: "v.", trans: "促進、使便利", detail: "重音在 si。", example: "The new system will facilitate better communication.", exampleTrans: "新系統將促進更好的溝通。" },
+    { word: "Guarantee", ipa: "[ˌɡærənˈtiː]", pos: "v./n.", trans: "保證、擔保", detail: "重音在最後的 tee。", example: "The product comes with a two-year guarantee.", exampleTrans: "該產品附有兩年保固。" },
+    { word: "Hesitate", ipa: "[ˈhezɪteɪt]", pos: "v.", trans: "猶豫、遲疑", detail: "he 發音為 [hɛ]。", example: "Please do not hesitate to contact us.", exampleTrans: "請隨時（不要猶豫）聯繫我們。" },
+    { word: "Implement", ipa: "[ˈɪmplɪment]", pos: "v.", trans: "實施、執行", detail: "重音在第一音節 im。", example: "The government decided to implement new policies.", exampleTrans: "政府決定實行新政策。" },
+    { word: "Justify", ipa: "[ˈdʒʌstɪfaɪ]", pos: "v.", trans: "證明...有理", detail: "重音在 jus [dʒʌs]。", example: "How can you justify such a high cost?", exampleTrans: "你如何解釋這麼高的成本是合理的？" }
+  ],
+  "Day 4": [
+    { word: "Knowledgeable", ipa: "[ˈnɑːlɪdʒəbl]", pos: "adj.", trans: "知識淵博的", detail: "know 發 [nɑː]。", example: "She is very knowledgeable about local history.", exampleTrans: "她對當地歷史非常了解。" },
+    { word: "Landscape", ipa: "[ˈlændskeɪp]", pos: "n.", trans: "風景、景觀", detail: "land 發 [lænd]。", example: "The urban landscape is changing rapidly.", exampleTrans: "城市景觀正在迅速改變。" },
+    { word: "Maintain", ipa: "[meɪnˈteɪn]", pos: "v.", trans: "維持、保養", detail: "重音在 tain。", example: "It is important to maintain a healthy weight.", exampleTrans: "維持健康的體重很重要。" },
+    { word: "Negotiate", ipa: "[nɪˈɡoʊʃieɪt]", pos: "v.", trans: "談判、協商", detail: "ti 發音類似 sh。", example: "They are trying to negotiate a new contract.", exampleTrans: "他們正試圖商定一份新合約。" },
+    { word: "Objective", ipa: "[əbˈdʒektɪv]", pos: "n./adj.", trans: "目標、客觀的", detail: "重音在 jec [dʒɛk]。", example: "Our main objective is to improve efficiency.", exampleTrans: "我們的主要目標是提高效率。" }
+  ],
+  "Day 5": [
+    { word: "Participate", ipa: "[pɑːrˈtɪsɪpeɪt]", pos: "v.", trans: "參加、參與", detail: "重音在 ti。", example: "Many people choose to participate in the marathon.", exampleTrans: "許多人選擇參加馬拉松。" },
+    { word: "Qualify", ipa: "[ˈkwɑːlɪfaɪ]", pos: "v.", trans: "取得資格、符合", detail: "qua 發 [kwɑː]。", example: "Does he qualify for the scholarship?", exampleTrans: "他有資格領取獎學金嗎？" },
+    { word: "Reinforce", ipa: "[ˌriːɪnˈfɔːrs]", pos: "v.", trans: "強化、加固", detail: "重音在 force。", example: "The message was reinforced with TV ads.", exampleTrans: "這個訊息透過電視廣告得到了強化。" },
+    { word: "Significant", ipa: "[sɪɡˈnɪfɪkənt]", pos: "adj.", trans: "重要的、顯著的", detail: "重音在 nif [nɪf]。", example: "There has been a significant increase in sales.", exampleTrans: "銷售量有了顯著增長。" },
+    { word: "Tolerance", ipa: "[ˈtɑːlərəns]", pos: "n.", trans: "寬容、忍耐力", detail: "tol 發 [tɑːl]。", example: "We should have tolerance for different opinions.", exampleTrans: "我們應該對不同的意見保持包容。" }
+  ],
+  "Day 6": [
+    { word: "Underestimate", ipa: "[ˌʌndərˈestɪmeɪt]", pos: "v.", trans: "低估", detail: "under [ʌndər] + estimate。", example: "Don't underestimate the time needed for the project.", exampleTrans: "不要低估這項專案所需的時間。" },
+    { word: "Vague", ipa: "[veɪɡ]", pos: "adj.", trans: "模糊的、不明確的", detail: "單音節，ue 不發音。", example: "His answer was very vague.", exampleTrans: "他的回答非常模糊。" },
+    { word: "Withdraw", ipa: "[wɪðˈdrɔː]", pos: "v.", trans: "撤回、提取、退出", detail: "draw 發 [drɔː]。", example: "I need to withdraw some money from the bank.", exampleTrans: "我需要去銀行領一些錢。" },
+    { word: "Yield", ipa: "[jiːld]", pos: "v./n.", trans: "產生、產量、屈服", detail: "yi 發長音 [i]。", example: "The investment finally began to yield a profit.", exampleTrans: "這項投資終於開始產生利潤。" },
+    { word: "Zealous", ipa: "[ˈzeləs]", pos: "adj.", trans: "熱情的、狂熱的", detail: "ea 發短音 [ɛ]。", example: "She is a zealous supporter of environmental protection.", exampleTrans: "她是環保事業的熱情支持者。" }
+  ],
+  "Day 7": [
+    { word: "Acknowledge", ipa: "[əkˈnɑːlɪdʒ]", pos: "v.", trans: "承認、感謝", detail: "know 不發 k 音。", example: "He refused to acknowledge his mistake.", exampleTrans: "他拒絕承認自己的錯誤。" },
+    { word: "Barrier", ipa: "[ˈbæriər]", pos: "n.", trans: "障礙、屏障", detail: "barr 發 [bær]。", example: "Language is often a barrier to communication.", exampleTrans: "語言通常是溝通的障礙。" },
+    { word: "Cooperate", ipa: "[koʊˈɑːpəreɪt]", pos: "v.", trans: "合作", detail: "co- + operate。", example: "Both companies agreed to cooperate on the project.", exampleTrans: "兩家公司同意在該專案上進行合作。" },
+    { word: "Departure", ipa: "[dɪˈpɑːrtʃər]", pos: "n.", trans: "離開、出發", detail: "重音在 par [pɑːr]。", example: "The flight departure was delayed by an hour.", exampleTrans: "班機起飛時間延誤了一個小時。" },
+    { word: "Essential", ipa: "[ɪˈsenʃl]", pos: "adj.", trans: "必要的、本質的", detail: "重音在 sen [sɛn]。", example: "Water is essential for life.", exampleTrans: "水是維持生命所必需的。" }
+  ],
+  "Day 8": [
+    { word: "Flexible", ipa: "[ˈfleksəbl]", pos: "adj.", trans: "靈活的、有彈性的", detail: "flex 發 [flɛks]。", example: "We can offer flexible working hours.", exampleTrans: "我們可以提供彈性的工作時間。" },
+    { word: "Genuine", ipa: "[ˈdʒenjuɪn]", pos: "adj.", trans: "真誠的、名副其實的", detail: "ine 發 [ɪn] 而非 [aɪn]。", example: "Is that a genuine leather jacket?", exampleTrans: "那是件真皮夾克嗎？" },
+    { word: "Hostile", ipa: "[ˈhɑːstl]", pos: "adj.", trans: "敵對的、不友好的", detail: "hos 發 [hɑːs]。", example: "The speaker faced a hostile audience.", exampleTrans: "演講者面對的是充滿敵意的聽眾。" },
+    { word: "Innovative", ipa: "[ˈɪnəveɪtɪv]", pos: "adj.", trans: "創新的", detail: "重音在第一音節 in。", example: "The company is known for its innovative products.", exampleTrans: "這間公司以其創新產品聞名。" },
+    { word: "Label", ipa: "[ˈleɪbl]", pos: "n./v.", trans: "標籤、貼標籤", detail: "la 發 [leɪ]。", example: "Always read the label before taking medicine.", exampleTrans: "服藥前務必閱讀標籤。" }
+  ],
+  "Day 9": [
+    { word: "Magnificent", ipa: "[mæɡˈnɪfɪsnt]", pos: "adj.", trans: "壯麗的、宏偉的", detail: "重音在 nif [nɪf]。", example: "The view from the top is magnificent.", exampleTrans: "頂部的視野非常壯觀。" },
+    { word: "Necessity", ipa: "[nəˈsesəti]", pos: "n.", trans: "必要性、必需品", detail: "重音在 ces [sɛs]。", example: "Sleep is a biological necessity.", exampleTrans: "睡眠是生理上的必需。" },
+    { word: "Obstacle", ipa: "[ˈɑːbstəkl]", pos: "n.", trans: "障礙、干擾", detail: "ob 發 [ɑːb]。", example: "We must overcome every obstacle to succeed.", exampleTrans: "要成功我們必須克服每一個障礙。" },
+    { word: "Punctual", ipa: "[ˈpʌŋktʃuəl]", pos: "adj.", trans: "準時的", detail: "punc 發 [pʌŋk]。", example: "Please try to be punctual for the meeting.", exampleTrans: "請儘量準時參加會議。" },
+    { word: "Reliable", ipa: "[rɪˈlaɪəbl]", pos: "adj.", trans: "可靠的、可信賴的", detail: "重音在 li [laɪ]。", example: "We need a reliable person for this job.", exampleTrans: "我們需要一位可靠的人來做這份工作。" }
+  ],
+  "Day 10": [
+    { word: "Skeptical", ipa: "[ˈskeptɪkl]", pos: "adj.", trans: "懷疑的", detail: "skep 發 [skɛp]。", example: "I am skeptical about his excuses.", exampleTrans: "我對他的藉口深感懷疑。" },
+    { word: "Tremendous", ipa: "[trəˈmendəs]", pos: "adj.", trans: "巨大的、極好的", detail: "重音在 men [mɛn]。", example: "The event was a tremendous success.", exampleTrans: "這次活動取得了巨大的成功。" },
+    { word: "Ultimate", ipa: "[ˈʌltɪmət]", pos: "adj.", trans: "最終的、極致的", detail: "重音在第一音節 ul。", example: "Our ultimate goal is world peace.", exampleTrans: "我們的最終目標是世界和平。" },
+    { word: "Versatile", ipa: "[ˈvɜːrsətl]", pos: "adj.", trans: "多才多藝的、多功能的", detail: "ver 發 [vɜːr]。", example: "This tool is very versatile.", exampleTrans: "這個工具功能非常多。" },
+    { word: "Welfare", ipa: "[ˈwelfer]", pos: "n.", trans: "福利、幸福", detail: "wel 發 [wɛl]。", example: "The government is concerned about public welfare.", exampleTrans: "政府關心大眾福祉。" }
+  ]
+};
+
+const App = () => {
+  const [currentDay, setCurrentDay] = useState("Day 1");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [showDayPicker, setShowDayPicker] = useState(false);
+
+  const days = useMemo(() => Object.keys(wordData), []);
+  const currentWords = wordData[currentDay];
+  const currentWord = currentWords[currentIndex];
+
+  const handleSpeak = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const nextCard = () => {
+    if (currentIndex < currentWords.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setIsFlipped(false);
+    } else {
+      setIsCompleted(true);
+    }
+  };
+
+  const prevCard = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+      setIsFlipped(false);
+      setIsCompleted(false);
+    }
+  };
+
+  const resetDay = () => {
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setIsCompleted(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center font-sans text-slate-800 p-4 pb-20">
+      <div className="max-w-md w-full">
+        {/* Header */}
+        <header className="py-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold mb-3">
+             <BookOpen size={14} /> GEPT 中級英檢
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">5000 單字挑戰</h1>
+          <p className="text-slate-500 text-sm">每天 5 分鐘，建立強大詞彙庫</p>
+        </header>
+
+        {/* Day Selector Navigation */}
+        <div className="relative mb-8">
+          <button 
+            onClick={() => setShowDayPicker(!showDayPicker)}
+            className="w-full flex items-center justify-between bg-white px-5 py-4 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-400 transition-all"
+          >
+            <div className="flex items-center gap-3 font-bold text-lg">
+              <Calendar className="text-blue-500" size={20} />
+              {currentDay}
+            </div>
+            <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">更換進度</div>
+          </button>
+
+          {showDayPicker && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 p-3 z-50 grid grid-cols-4 gap-2 animate-in slide-in-from-top-2 duration-200">
+              {days.map(day => (
+                <button
+                  key={day}
+                  onClick={() => { setCurrentDay(day); resetDay(); setShowDayPicker(false); }}
+                  className={`py-2 rounded-xl text-sm font-bold transition-all ${
+                    currentDay === day ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {day.replace("Day ", "")}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Progress Bar */}
+        {!isCompleted && (
+          <div className="mb-6 px-1">
+            <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+              <span>Current Word: {currentIndex + 1} / {currentWords.length}</span>
+              <span>Today's Goal: {Math.round(((currentIndex) / currentWords.length) * 100)}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-500 transition-all duration-500 ease-out" 
+                style={{ width: `${((currentIndex) / currentWords.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {/* Card Area */}
+        <div className="relative h-96 perspective-1000 mb-8">
+          {!isCompleted ? (
+            <div 
+              onClick={() => setIsFlipped(!isFlipped)}
+              className={`relative w-full h-full transition-transform duration-700 transform-style-3d cursor-pointer ${isFlipped ? 'rotate-y-180' : ''}`}
+            >
+              {/* Front Side */}
+              <div className="absolute inset-0 w-full h-full bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 flex flex-col items-center justify-center p-8 backface-hidden">
+                <div className="absolute top-8 left-8 text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">English</div>
+                <h2 className="text-4xl font-black text-slate-900 mb-2 text-center break-words">{currentWord.word}</h2>
+                <div className="text-lg text-slate-400 font-mono mb-8 bg-slate-50 px-4 py-1 rounded-full">{currentWord.ipa}</div>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleSpeak(currentWord.word); }}
+                  className="w-16 h-16 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:scale-110 transition-transform active:scale-95"
+                >
+                  <Volume2 size={32} />
+                </button>
+                <div className="absolute bottom-8 text-slate-300 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                  <span>Click to flip</span>
+                </div>
+              </div>
+
+              {/* Back Side */}
+              <div className="absolute inset-0 w-full h-full bg-blue-600 text-white rounded-[2.5rem] shadow-xl flex flex-col p-8 rotate-y-180 backface-hidden overflow-y-auto">
+                <div className="flex justify-between items-center mb-6">
+                  <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{currentWord.pos}</span>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleSpeak(currentWord.word); }}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    <Volume2 size={24} />
+                  </button>
+                </div>
+                
+                <h3 className="text-3xl font-black mb-1">{currentWord.word}</h3>
+                <p className="text-2xl font-bold mb-6 text-blue-100">{currentWord.trans}</p>
+                
+                <div className="space-y-4">
+                  <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                    <p className="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1">Pronunciation Tips</p>
+                    <p className="text-sm leading-relaxed">{currentWord.detail}</p>
+                  </div>
+
+                  <div className="bg-blue-700/50 p-5 rounded-2xl border border-blue-400/30">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-[10px] font-black text-blue-200 uppercase tracking-widest">Example</p>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleSpeak(currentWord.example); }}
+                        className="p-1 hover:bg-blue-600 rounded"
+                      >
+                        <Volume2 size={16} />
+                      </button>
+                    </div>
+                    <p className="text-sm font-medium mb-2 leading-relaxed italic">"{currentWord.example}"</p>
+                    <p className="text-sm text-blue-100 font-medium">→ {currentWord.exampleTrans}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full h-full bg-white rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col items-center justify-center p-8 animate-in zoom-in duration-500">
+              <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 border-4 border-green-100">
+                <CheckCircle2 size={56} />
+              </div>
+              <h2 className="text-3xl font-black text-slate-900 mb-2">任務達成！</h2>
+              <p className="text-slate-500 mb-10 text-center font-medium px-4">
+                你已經掌握了 {currentDay} 的 5 個核心單字。<br/>
+                累積進度：{days.indexOf(currentDay) * 5 + 5} / 5000 字
+              </p>
+              <div className="flex flex-col gap-3 w-full">
+                <button 
+                  onClick={() => {
+                    const nextIdx = (days.indexOf(currentDay) + 1) % days.length;
+                    setCurrentDay(days[nextIdx]);
+                    resetDay();
+                  }}
+                  className="w-full flex items-center justify-center gap-3 py-5 bg-blue-600 text-white rounded-[1.5rem] font-black text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
+                >
+                  開始明天挑戰 <ChevronRight size={20} />
+                </button>
+                <button 
+                  onClick={resetDay}
+                  className="w-full flex items-center justify-center gap-2 py-4 text-slate-400 font-bold hover:text-slate-600 transition-colors"
+                >
+                  <RotateCcw size={18} /> 再次複習本日單字
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation Controls */}
+        {!isCompleted && (
+          <div className="flex justify-between items-center gap-4">
+            <button 
+              onClick={prevCard}
+              disabled={currentIndex === 0}
+              className={`flex-1 flex items-center justify-center gap-2 py-5 rounded-[1.5rem] font-black text-sm transition-all ${
+                currentIndex === 0 
+                ? 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-50' 
+                : 'bg-white text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <ChevronLeft size={18} /> BACK
+            </button>
+            <button 
+              onClick={nextCard}
+              className="flex-1 flex items-center justify-center gap-2 py-5 bg-slate-900 text-white rounded-[1.5rem] font-black text-sm shadow-xl hover:bg-slate-800 active:scale-95 transition-all"
+            >
+              {currentIndex === currentWords.length - 1 ? 'COMPLETE' : 'NEXT WORD'} <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <style jsx>{`
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+      `}</style>
+    </div>
+  );
+};
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        
-        // 這裡定義圖示組件，對接 Lucide CDN
-        const Icon = ({ name, size = 24, className = "" }) => {
-            const [iconHtml, setIconHtml] = useState("");
-            useEffect(() => {
-                if (window.lucide) {
-                    const svg = lucide.createIcons({
-                        icons: { [name]: true },
-                        attrs: { strokeWidth: 2, width: size, height: size, class: className }
-                    });
-                }
-            }, [name, size, className]);
-            return <i data-lucide={name} className={className}></i>;
-        };
-
-        const wordData = {
-          "Day 1": [
-            { word: "Abandon", ipa: "[əˈbændən]", pos: "v.", trans: "拋棄、放棄", detail: "重音在第二音節 ban。", example: "He had to abandon the car after it broke down.", exampleTrans: "汽車拋錨後，他不得不棄車而去。" },
-            { word: "Accomplish", ipa: "[əˈkʌmplɪʃ]", pos: "v.", trans: "完成、實現", detail: "sh 發音要輕快。", example: "We can accomplish anything if we work together.", exampleTrans: "如果我們齊心協力，任何事都能完成。" },
-            { word: "Accountable", ipa: "[əˈkaʊntəbl]", pos: "adj.", trans: "應負責任的", detail: "重音在 coun，able 發音較輕。", example: "Politicians should be accountable to the public.", exampleTrans: "政治人物應對公眾負責。" },
-            { word: "Accustom", ipa: "[əˈkʌstəm]", pos: "v.", trans: "使習慣於", detail: "cus 發短音 [ʌ]。", example: "It took me a while to accustom myself to the new climate.", exampleTrans: "我花了一段時間才讓自己適應新氣候。" },
-            { word: "Acquisition", ipa: "[ˌækwɪˈzɪʃn]", pos: "n.", trans: "獲得、獲得物", detail: "重音在 zi，ac 發 [æ]。", example: "The library's latest acquisition is a rare book.", exampleTrans: "圖書館最新獲得的藏品是一本罕見的書。" }
-          ],
-          "Day 2": [
-            { word: "Beneficial", ipa: "[ˌbenɪˈfɪʃl]", pos: "adj.", trans: "有益的", detail: "重音在 fi。", example: "A balanced diet is beneficial to your health.", exampleTrans: "均衡飲食對你的健康有益。" },
-            { word: "Capacity", ipa: "[kəˈpæsəti]", pos: "n.", trans: "容量、能力", detail: "重音在 pa。", example: "The stadium has a seating capacity of 50,000.", exampleTrans: "這座體育場有五萬個座位。" },
-            { word: "Confront", ipa: "[kənˈfrʌnt]", pos: "v.", trans: "面對、對抗", detail: "front 發音類似 fr-unt。", example: "We must confront the challenges head-on.", exampleTrans: "我們必須正面迎接挑戰。" },
-            { word: "Distinguish", ipa: "[dɪˈstɪŋɡwɪʃ]", pos: "v.", trans: "區分、辨別", detail: "gui 發 [ɡwɪ] 的音。", example: "It's hard to distinguish between the two colors.", exampleTrans: "很難區分這兩種顏色。" },
-            { word: "Equivalent", ipa: "[ɪˈkwɪvələnt]", pos: "adj./n.", trans: "相等的、等價物", detail: "重音在 qui [kwɪ]。", example: "Eight kilometers is roughly equivalent to five miles.", exampleTrans: "8公里大約等於5英里。" }
-          ]
-        };
-
-        const App = () => {
-          const [currentDay, setCurrentDay] = useState("Day 1");
-          const [currentIndex, setCurrentIndex] = useState(0);
-          const [isFlipped, setIsFlipped] = useState(false);
-          const [isCompleted, setIsCompleted] = useState(false);
-
-          useEffect(() => {
-            if (window.lucide) lucide.createIcons();
-          }, [currentIndex, isFlipped, isCompleted, currentDay]);
-
-          const currentWords = wordData[currentDay];
-          const currentWord = currentWords[currentIndex];
-
-          const handleSpeak = (text) => {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-          };
-
-          const nextCard = () => {
-            if (currentIndex < currentWords.length - 1) {
-              setCurrentIndex(prev => prev + 1);
-              setIsFlipped(false);
-            } else {
-              setIsCompleted(true);
-            }
-          };
-
-          const prevCard = () => {
-            if (currentIndex > 0) {
-              setCurrentIndex(prev => prev - 1);
-              setIsFlipped(false);
-              setIsCompleted(false);
-            }
-          };
-
-          const resetDay = () => {
-            setCurrentIndex(0);
-            setIsFlipped(false);
-            setIsCompleted(false);
-          };
-
-          return (
-            <div className="min-h-screen bg-slate-50 p-4 md:p-8 flex flex-col items-center font-sans text-slate-800">
-              <div className="max-w-md w-full">
-                <header className="mb-8 text-center">
-                  <h1 className="text-3xl font-bold text-blue-600 mb-2">GEPT 英檢中級閃卡</h1>
-                  <p className="text-slate-500">每天 5 個字，輕鬆掌握 5000 單</p>
-                  <div className="mt-4 flex justify-center gap-2">
-                    {Object.keys(wordData).map(day => (
-                      <button key={day} onClick={() => { setCurrentDay(day); resetDay(); }}
-                        className={`px-4 py-1 rounded-full text-sm font-medium transition-colors ${currentDay === day ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'}`}>
-                        {day}
-                      </button>
-                    ))}
-                  </div>
-                </header>
-
-                <div className="mb-6">
-                  <div className="flex justify-between text-xs font-semibold text-slate-400 mb-1">
-                    <span>進度: {currentIndex + 1} / {currentWords.length}</span>
-                    <span>{Math.round(((currentIndex + (isCompleted ? 1 : 0)) / currentWords.length) * 100)}%</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${((currentIndex + (isCompleted ? 1 : 0)) / currentWords.length) * 100}%` }}></div>
-                  </div>
-                </div>
-
-                <div className="relative h-96 perspective-1000 mb-8">
-                  {!isCompleted ? (
-                    <div onClick={() => setIsFlipped(!isFlipped)} className={`relative w-full h-full transition-transform duration-500 transform-style-3d cursor-pointer ${isFlipped ? 'rotate-y-180' : ''}`}>
-                      <div className="absolute inset-0 w-full h-full bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center justify-center p-8 backface-hidden">
-                        <div className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">Vocabulary</div>
-                        <h2 className="text-5xl font-bold mb-2">{currentWord.word}</h2>
-                        <div className="text-xl text-slate-400 font-mono mb-6">{currentWord.ipa}</div>
-                        <button onClick={(e) => { e.stopPropagation(); handleSpeak(currentWord.word); }} className="p-3 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100"><Icon name="volume-2" /></button>
-                      </div>
-                      <div className="absolute inset-0 w-full h-full bg-blue-600 text-white rounded-3xl shadow-xl flex flex-col p-8 rotate-y-180 backface-hidden overflow-y-auto">
-                        <div className="flex justify-between items-start mb-4">
-                          <span className="bg-blue-500 px-3 py-1 rounded text-xs font-bold">{currentWord.pos}</span>
-                          <button onClick={(e) => { e.stopPropagation(); handleSpeak(currentWord.word); }} className="p-1 hover:bg-blue-500 rounded"><Icon name="volume-2" size={20} /></button>
-                        </div>
-                        <h3 className="text-3xl font-bold mb-1">{currentWord.word}</h3>
-                        <p className="text-2xl font-medium mb-4 text-blue-100">{currentWord.trans}</p>
-                        <div className="border-t border-blue-500 pt-4 mb-4">
-                          <p className="text-sm font-semibold text-blue-200 mb-1">發音要點：</p>
-                          <p className="text-sm">{currentWord.detail}</p>
-                        </div>
-                        <div className="bg-blue-700/50 p-4 rounded-xl">
-                          <div className="flex justify-between items-center mb-2">
-                            <p className="text-xs font-bold text-blue-200 uppercase">Example</p>
-                            <button onClick={(e) => { e.stopPropagation(); handleSpeak(currentWord.example); }} className="p-1 hover:bg-blue-600 rounded"><Icon name="volume-2" size={16} /></button>
-                          </div>
-                          <p className="text-sm leading-relaxed mb-2 font-medium">{currentWord.example}</p>
-                          <p className="text-sm text-blue-100">{currentWord.exampleTrans}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full bg-white rounded-3xl shadow-xl flex flex-col items-center justify-center p-8">
-                      <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6"><Icon name="check-circle-2" size={48} /></div>
-                      <h2 className="text-2xl font-bold mb-2">太棒了！</h2>
-                      <div className="flex gap-4">
-                        <button onClick={resetDay} className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold"><Icon name="rotate-ccw" size={20} /> 重來</button>
-                        <button onClick={() => { setCurrentDay(currentDay === "Day 1" ? "Day 2" : "Day 1"); resetDay(); }} className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg">下一組 <Icon name="chevron-right" size={20} /></button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {!isCompleted && (
-                  <div className="flex justify-between items-center gap-4">
-                    <button onClick={prevCard} disabled={currentIndex === 0} className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold ${currentIndex === 0 ? 'bg-slate-100 text-slate-300' : 'bg-white text-slate-600 shadow-md'}`}>
-                      <Icon name="chevron-left" /> 上一個
-                    </button>
-                    <button onClick={nextCard} className="flex-1 flex items-center justify-center gap-2 py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200">
-                      {currentIndex === currentWords.length - 1 ? '完成' : '下一個'} <Icon name="chevron-right" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+export default App;
